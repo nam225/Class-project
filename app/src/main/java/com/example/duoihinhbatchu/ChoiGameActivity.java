@@ -1,33 +1,41 @@
 package com.example.duoihinhbatchu;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.animation.ValueAnimator;
+import android.app.Dialog;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
-import android.widget.AdapterView;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.bumptech.glide.Glide;
 import com.example.duoihinhbatchu.adapter.DapAnAdapter;
 import com.example.duoihinhbatchu.model.ChoiGameModels;
 import com.example.duoihinhbatchu.object.CauDo;
+import com.example.duoihinhbatchu.object.SoundManager;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 public class ChoiGameActivity extends AppCompatActivity {
-    ChoiGameModels models;
-    CauDo cauDo;
-    private String dapAn = "soctrang";
-    ArrayList<String> arrCauTraLoi;
-    GridView gdvCauTraLoi;
-    ArrayList<String> arrDapAn;
-    GridView gdvDapAn;
-    ImageView imgCauDo;
-    TextView txvTienNguoiDung;
+    private ChoiGameModels models;
+    private String dapAn;
+    private ArrayList<String> arrCauTraLoi;
+    private GridView gdvCauTraLoi;
+    private ArrayList<String> arrDapAn;
+    private GridView gdvDapAn;
+    private ImageView imgCauDo;
+    private TextView txvTienNguoiDung;
+    private ImageView home;
     int index = 0;
 
     @Override
@@ -38,6 +46,14 @@ public class ChoiGameActivity extends AppCompatActivity {
         anhXa();
         setOnClick();
         hienCauDo();
+        SoundManager.playBackgroundMusic(ChoiGameActivity.this, R.raw.background_music);
+
+        home.setOnClickListener(v -> {
+            SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
+            Intent intent = new Intent(ChoiGameActivity.this, MainActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void anhXa() {
@@ -45,6 +61,7 @@ public class ChoiGameActivity extends AppCompatActivity {
         gdvDapAn = findViewById(R.id.gdvDapAn);
         imgCauDo = findViewById(R.id.imgCauDo);
         txvTienNguoiDung = findViewById(R.id.txvTienNguoiDung);
+        home = findViewById(R.id.home_icon);
     }
 
     private void init() {
@@ -54,19 +71,23 @@ public class ChoiGameActivity extends AppCompatActivity {
     }
 
     private void hienCauDo() {
-        cauDo = models.layCauDo();
-        dapAn = cauDo.dapAn;
-
+        models.layThongTin();
+        int id = models.getNguoiDung().currentId;
+        CauDo cauDo = models.layCauDo(id);
+        if(cauDo == null){
+            Toast.makeText(this, "Tạm thời hết câu hỏi", Toast.LENGTH_LONG).show();
+            cauDo = models.layCauDo(--id);
+        }
+        dapAn = cauDo.getDapAn();
         bamData();
         hienThiCauTraLoi();
         hienThiDapAn();
 
         Glide
                 .with(this)
-                .load(cauDo.anh)
+                .load(cauDo.getAnh())
                 .into(imgCauDo);
-        models.layThongTin();
-        txvTienNguoiDung.setText(models.nguoiDung.tien + "$");
+        txvTienNguoiDung.setText(models.getNguoiDung().tien + "$");
     }
 
     private void hienThiCauTraLoi() {
@@ -80,43 +101,38 @@ public class ChoiGameActivity extends AppCompatActivity {
     }
 
     private void setOnClick() {
-        gdvDapAn.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String s = (String) parent.getItemAtPosition(position);
-                if (s.length() != 0 && index < arrCauTraLoi.size()) {
-                    for (int i = 0; i < arrCauTraLoi.size(); i++) {
-                        if (arrCauTraLoi.get(i).length() == 0) {
-                            index = i;
-                            break;
-                        }
+        gdvDapAn.setOnItemClickListener((parent, view, position, id) -> {
+            SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
+            String s = (String) parent.getItemAtPosition(position);
+            if (s.length() != 0 && index < arrCauTraLoi.size()) {
+                for (int i = 0; i < arrCauTraLoi.size(); i++) {
+                    if (arrCauTraLoi.get(i).length() == 0) {
+                        index = i;
+                        break;
                     }
-                    arrDapAn.set(position, "");
-                    arrCauTraLoi.set(index, s);
-                    index++;
-                    hienThiCauTraLoi();
-                    hienThiDapAn();
-                    checkWin();
                 }
+                arrDapAn.set(position, "");
+                arrCauTraLoi.set(index, s);
+                index++;
+                hienThiCauTraLoi();
+                hienThiDapAn();
+                checkWin();
             }
         });
-
-        gdvCauTraLoi.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String s = (String) parent.getItemAtPosition(position);
-                if (s.length() != 0) {
-                    index = position;
-                    arrCauTraLoi.set(position, "");
-                    for (int i = 0; i < arrDapAn.size(); i++) {
-                        if (arrDapAn.get(i).length() == 0) {
-                            arrDapAn.set(i, s);
-                            break;
-                        }
+        gdvCauTraLoi.setOnItemClickListener((parent, view, position, id) -> {
+            SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
+            String s = (String) parent.getItemAtPosition(position);
+            if (s.length() != 0) {
+                index = position;
+                arrCauTraLoi.set(position, "");
+                for (int i = 0; i < arrDapAn.size(); i++) {
+                    if (arrDapAn.get(i).length() == 0) {
+                        arrDapAn.set(i, s);
+                        break;
                     }
-                    hienThiCauTraLoi();
-                    hienThiDapAn();
                 }
+                hienThiCauTraLoi();
+                hienThiDapAn();
             }
         });
     }
@@ -125,16 +141,26 @@ public class ChoiGameActivity extends AppCompatActivity {
         index = 0;
         arrCauTraLoi.clear();
         arrDapAn.clear();
+
+        gdvCauTraLoi.clearAnimation();
+        for (int i = 0; i < gdvCauTraLoi.getChildCount(); i++) {
+            View gridItem = gdvCauTraLoi.getChildAt(i);
+            if (gridItem != null) {
+                gridItem.clearAnimation();
+                gridItem.setBackgroundColor(Color.TRANSPARENT);
+            }
+        }
+
         Random r = new Random();
         for (int i = 0; i < dapAn.length(); i++) {
             arrCauTraLoi.add("");
-            String s = "" + (char) (r.nextInt(26) + 65);
+            String s = String.valueOf((char) (r.nextInt(26) + 65));
             arrDapAn.add(s);
-            String s1 = "" + (char) (r.nextInt(26) + 65);
+            String s1 = String.valueOf((char) (r.nextInt(26) + 65));
             arrDapAn.add(s1);
         }
         for (int i = 0; i < dapAn.length(); i++) {
-            String s = "" + dapAn.charAt(i);
+            String s = String.valueOf(dapAn.charAt(i));
             arrDapAn.set(i, s.toUpperCase());
         }
         for (int i = 0; i < arrDapAn.size(); i++) {
@@ -152,47 +178,69 @@ public class ChoiGameActivity extends AppCompatActivity {
         }
         s = new StringBuilder(s.toString().toUpperCase());
         if (s.toString().equals(dapAn.toUpperCase())) {
-            Toast.makeText(this, "Bạn đã chiến thắng !!!", Toast.LENGTH_SHORT).show();
             models.layThongTin();
-            models.nguoiDung.tien = models.nguoiDung.tien + 10;
+            models.getNguoiDung().currentId++;
             models.luuThongTin();
-            hienCauDo();
+            congTien(10);
+
+            Animation glowEffect = AnimationUtils.loadAnimation(this, R.anim.glow_alpha);
+            gdvCauTraLoi.startAnimation(glowEffect);
+            for (int i = 0; i < gdvCauTraLoi.getChildCount(); i++) {
+                View view = gdvCauTraLoi.getChildAt(i);
+                view.setBackgroundResource(R.drawable.glow_effect);
+            }
+            new Handler().postDelayed(this::openDialog, 2000);
         }
+    }
+
+    private void openDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_asking);
+
+        Button btnContinue = dialog.findViewById(R.id.btn_continue);
+        Button btnGoBack = dialog.findViewById(R.id.btn_main_activity);
+
+        btnContinue.setOnClickListener(v -> {
+            dialog.dismiss();
+            hienCauDo();
+        });
+
+        btnGoBack.setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, MainActivity.class));
+        });
+        dialog.show();
     }
 
     public void moGoiY(View view) {
         models.layThongTin();
-        if(models.nguoiDung.tien < 5){
+        SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
+        if (models.getNguoiDung().tien < 5) {
             Toast.makeText(this, "Bạn đã hết tiền", Toast.LENGTH_SHORT).show();
             return;
         }
         int id = -1;
         for (int i = 0; i < arrCauTraLoi.size(); i++) {
             if (arrCauTraLoi.get(i).length() == 0) {
-                id = 1;
+                id = i;
                 break;
             }
         }
         if (id == -1) {
             for (int i = 0; i < arrCauTraLoi.size(); i++) {
-                String s = dapAn.toUpperCase().charAt(i) + "";
+                String s = String.valueOf(dapAn.toUpperCase().charAt(i));
                 if (!arrCauTraLoi.get(i).toUpperCase().equals(s)) {
                     id = i;
                     break;
                 }
             }
-            for (int i = 0; i < arrDapAn.size(); i++) {
-                if (arrDapAn.get(i).length() == 0) {
-                    arrDapAn.set(i, arrCauTraLoi.get(id));
-                    break;
-                }
-            }
         }
-        String goiY = "" + dapAn.charAt(id);
+        String goiY = String.valueOf(dapAn.charAt(id));
         goiY = goiY.toUpperCase();
+
         for (int i = 0; i < arrCauTraLoi.size(); i++) {
             if (arrCauTraLoi.get(i).toUpperCase().equals(goiY)) {
-                arrCauTraLoi.set(i,"");
+                arrCauTraLoi.set(i, "");
                 break;
             }
         }
@@ -205,21 +253,64 @@ public class ChoiGameActivity extends AppCompatActivity {
         arrCauTraLoi.set(id, goiY);
         hienThiCauTraLoi();
         hienThiDapAn();
-        models.layThongTin();
-        models.nguoiDung.tien = models.nguoiDung.tien - 5;
-        models.luuThongTin();
-        txvTienNguoiDung.setText(models.nguoiDung.tien + "$");
+        truTien(5);
+
+        Toast.makeText(this, "Gợi ý đã được mở!", Toast.LENGTH_SHORT).show();
+        checkWin();
     }
 
     public void doiCauHoi(View view) {
+        SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
         models.layThongTin();
-        if(models.nguoiDung.tien < 5){
+        if (models.getNguoiDung().tien < 10) {
             Toast.makeText(this, "Bạn đã hết tiền", Toast.LENGTH_SHORT).show();
             return;
         }
-        models.nguoiDung.tien = models.nguoiDung.tien - 10;
+        models.getNguoiDung().currentId++;
         models.luuThongTin();
-        txvTienNguoiDung.setText(models.nguoiDung.tien + "$");
+        truTien(10);
         hienCauDo();
     }
+
+    private void updateMoney(int newAmount) {
+        int currentMoney = Integer.parseInt(txvTienNguoiDung.getText().toString().replace("$", ""));
+
+        ValueAnimator animator = ValueAnimator.ofInt(currentMoney, newAmount);
+        animator.setDuration(1000);
+        animator.addUpdateListener(animation -> {
+            int animatedValue = (int) animation.getAnimatedValue();
+            txvTienNguoiDung.setText(animatedValue + "$");
+        });
+
+        animator.start();
+    }
+
+    private void congTien(int soTienCongThem) {
+        models.layThongTin();
+        int newAmount = models.getNguoiDung().tien + soTienCongThem;
+        updateMoney(newAmount);
+        models.getNguoiDung().tien = newAmount;
+        models.luuThongTin();
+    }
+
+    private void truTien(int soTienBiTru) {
+        models.layThongTin();
+        int newAmount = models.getNguoiDung().tien - soTienBiTru;
+        updateMoney(newAmount);
+        models.getNguoiDung().tien = newAmount;
+        models.luuThongTin();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SoundManager.resumeBackgroundMusic();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SoundManager.pauseBackgroundMusic();
+    }
+
 }
