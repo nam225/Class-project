@@ -2,15 +2,6 @@ package com.example.duoihinhbatchu.object;
 
 public class CauDo {
     private int id;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
     private String dapAn;
     private String anh;
     public CauDo(){}
@@ -29,6 +20,14 @@ public class CauDo {
 
     public void setAnh(String anh) {
         this.anh = anh;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public CauDo(int id, String dapAn, String anh) {

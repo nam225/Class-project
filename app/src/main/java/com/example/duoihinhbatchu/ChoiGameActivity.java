@@ -53,7 +53,6 @@ public class ChoiGameActivity extends AppCompatActivity {
             Intent intent = new Intent(ChoiGameActivity.this, MainActivity.class);
             startActivity(intent);
         });
-
     }
 
     private void anhXa() {
@@ -66,6 +65,8 @@ public class ChoiGameActivity extends AppCompatActivity {
 
     private void init() {
         models = new ChoiGameModels(this);
+        models.setArr(new CauDoRepository(this).getAllCauDo());
+//        models.xoaThongTin();
         arrCauTraLoi = new ArrayList<>();
         arrDapAn = new ArrayList<>();
     }
@@ -75,8 +76,8 @@ public class ChoiGameActivity extends AppCompatActivity {
         int id = models.getNguoiDung().currentId;
         CauDo cauDo = models.layCauDo(id);
         if(cauDo == null){
-            Toast.makeText(this, "Tạm thời hết câu hỏi", Toast.LENGTH_LONG).show();
-            cauDo = models.layCauDo(--id);
+            models.getNguoiDung().currentId = 1;
+            cauDo = models.layCauDo(0);
         }
         dapAn = cauDo.getDapAn();
         bamData();
@@ -262,13 +263,13 @@ public class ChoiGameActivity extends AppCompatActivity {
     public void doiCauHoi(View view) {
         SoundManager.playSoundEffect(ChoiGameActivity.this, R.raw.click_sound);
         models.layThongTin();
-        if (models.getNguoiDung().tien < 10) {
+        if (models.getNguoiDung().tien < 50) {
             Toast.makeText(this, "Bạn đã hết tiền", Toast.LENGTH_SHORT).show();
             return;
         }
         models.getNguoiDung().currentId++;
         models.luuThongTin();
-        truTien(10);
+        truTien(50);
         hienCauDo();
     }
 
