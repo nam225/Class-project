@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "228193390430",
+    "project_id": "dhbc-c62e8",
+    "storage_bucket": "dhbc-c62e8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:228193390430:android:4ab023acc39360b31d89cf",
+        "android_client_info": {
+          "package_name": "com.example.duoihinhbatchu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQncSqK59S0bQcvcfEwx9T9e5dXd3UPqI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
