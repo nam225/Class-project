@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -36,16 +37,21 @@ public class ChoiGameActivity extends AppCompatActivity {
     private ImageView imgCauDo;
     private TextView txvTienNguoiDung;
     private ImageView home;
+    private ArrayList<CauDo> list;
+
     int index = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choi_game);
+        list = (ArrayList<CauDo>) getIntent().getSerializableExtra("cauDoList");
+
         init();
         anhXa();
         setOnClick();
         hienCauDo();
+
         SoundManager.playBackgroundMusic(ChoiGameActivity.this, R.raw.background_music);
 
         home.setOnClickListener(v -> {
@@ -65,7 +71,13 @@ public class ChoiGameActivity extends AppCompatActivity {
 
     private void init() {
         models = new ChoiGameModels(this);
-        models.setArr(new CauDoRepository(this).getAllCauDo());
+        models.setArr(list);
+        if (list != null){
+            for (CauDo c : list){
+                Log.d("Cau Do", c.getDapAn());
+            }
+        }else
+            Log.d("Cau Do", "K lay duoc cau do");
 //        models.xoaThongTin();
         arrCauTraLoi = new ArrayList<>();
         arrDapAn = new ArrayList<>();
@@ -74,10 +86,12 @@ public class ChoiGameActivity extends AppCompatActivity {
     private void hienCauDo() {
         models.layThongTin();
         int id = models.getNguoiDung().currentId;
+        Log.d("Current id", String.valueOf(id));
         CauDo cauDo = models.layCauDo(id);
         if(cauDo == null){
             models.getNguoiDung().currentId = 1;
-            cauDo = models.layCauDo(0);
+            models.getNguoiDung().saveTT(this);
+            cauDo = models.layCauDo(1);
         }
         dapAn = cauDo.getDapAn();
         bamData();

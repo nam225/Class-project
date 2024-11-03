@@ -1,6 +1,8 @@
 package com.example.duoihinhbatchu.object;
 
-public class CauDo {
+import java.io.Serializable;
+
+public class CauDo implements Serializable {
     private int id;
     private String dapAn;
     private String anh;
